@@ -1,118 +1,98 @@
-let displayValue = "0";
+// Variables globales
+let displayValue = '0';
 let firstOperand = null;
+let currentOperator = null;
 let waitingForSecondOperand = false;
-let operator = null;
 
-function inputDigit(digit) {
-  if (waitingForSecondOperand === true) {
-    displayValue = digit;
-    waitingForSecondOperand = false;
-  } else {
-    displayValue = displayValue === "0" ? digit : displayValue + digit;
+// Actualiza el contenido de la pantalla de la calculadora
+const updateDisplay = () => {
+  document.querySelector('#display').textContent = displayValue;
+};
+
+// Resetea todos los valores de la calculadora
+const resetCalculator = () => {
+  displayValue = '0';
+  firstOperand = null;
+  currentOperator = null;
+  waitingForSecondOperand = false;
+};
+
+// Calcula el resultado de la operación actual
+const calculate = (a, b, operator) => {
+  switch (operator) {
+    case '+': return a + b;
+    case '-': return a - b;
+    case '*': return a * b;
+    case '/': return b !== 0 ? a / b : 'Error';
+    default: return b;
   }
-}
+};
 
-function inputDecimal(dot) {
-  if (waitingForSecondOperand === true) return;
-
-  if (!displayValue.includes(dot)) {
-    displayValue += dot;
-  }
-}
-
-function handleOperator(nextOperator) {
+// Maneja la entrada del operador
+const handleOperator = (operator) => {
   const inputValue = parseFloat(displayValue);
 
-  if (operator && waitingForSecondOperand) {
-    operator = nextOperator;
+  if (currentOperator && waitingForSecondOperand) {
+    currentOperator = operator;
     return;
   }
 
-  if (firstOperand == null) {
+  if (firstOperand === null) {
     firstOperand = inputValue;
-  } else if (operator) {
-    const result = operate(firstOperand, inputValue, operator);
-
-    displayValue = `${parseFloat(result.toFixed(7))}`;
-    firstOperand = result;
+  } else if (currentOperator) {
+    const result = calculate(firstOperand, inputValue, currentOperator);
+    displayValue = result === 'Error' ? result : `${parseFloat(result.toFixed(7))}`;
+    firstOperand = result === 'Error' ? null : result;
   }
 
   waitingForSecondOperand = true;
-  operator = nextOperator;
-}
+  currentOperator = operator;
+};
 
-function operate(firstOperand, secondOperand, operator) {
-  if (operator === "+") {
-    return firstOperand + secondOperand;
-  } else if (operator === "-") {
-    return firstOperand - secondOperand;
-  } else if (operator === "*") {
-    return firstOperand * secondOperand;
-  } else if (operator === "/") {
-    return secondOperand !== 0 ? firstOperand / secondOperand : "Error";
+// Maneja la entrada de un dígito
+const inputDigit = (digit) => {
+  if (waitingForSecondOperand) {
+    displayValue = digit;
+    waitingForSecondOperand = false;
+  } else {
+    displayValue = displayValue === '0' ? digit : displayValue + digit;
   }
+};
 
-  return secondOperand;
-}
-
-function resetCalculator() {
-  displayValue = "0";
-  firstOperand = null;
-  waitingForSecondOperand = false;
-  operator = null;
-}
-
-function backspace() {
-  displayValue = displayValue.slice(0, -1);
-  if (displayValue === "") {
-    displayValue = "0";
+// Maneja la entrada del punto decimal
+const inputDecimal = (dot) => {
+  if (!displayValue.includes(dot)) {
+    displayValue += dot;
   }
-}
+};
 
-function updateDisplay() {
-  const display = document.querySelector("#display");
-  display.textContent = displayValue;
-}
-
-const keys = document.querySelector(".buttons");
-keys.addEventListener("click", (event) => {
+// Maneja el evento de clic en los botones
+const handleButtonClick = (event) => {
   const { target } = event;
-  if (!target.matches("button")) {
-    return;
-  }
 
-  if (target.classList.contains("operator")) {
-    handleOperator(target.textContent);
-    updateDisplay();
-    return;
-  }
+  if (!target.matches('button')) return;
 
-  if (target.classList.contains("equal")) {
-    handleOperator("=");
-    updateDisplay();
-    return;
-  }
+  const value = target.textContent;
 
-  if (target.id === "clear") {
+  if (target.classList.contains('number')) {
+    inputDigit(value);
+  } else if (target.classList.contains('decimal')) {
+    inputDecimal(value);
+  } else if (target.classList.contains('operator')) {
+    handleOperator(value);
+  } else if (target.classList.contains('equal')) {
+    handleOperator('=');
+  } else if (target.classList.contains('clear')) {
     resetCalculator();
-    updateDisplay();
-    return;
+  } else if (target.classList.contains('backspace')) {
+    displayValue = displayValue.length > 1 ? displayValue.slice(0, -1) : '0';
   }
 
-  if (target.id === "backspace") {
-    backspace();
-    updateDisplay();
-    return;
-  }
-
-  if (target.textContent === ".") {
-    inputDecimal(target.textContent);
-    updateDisplay();
-    return;
-  }
-
-  inputDigit(target.textContent);
   updateDisplay();
-});
+};
 
+// Inicializa el evento de clic en los botones
+document.querySelector('.buttons').addEventListener('click', handleButtonClick);
+
+// Inicializa la pantalla
 updateDisplay();
