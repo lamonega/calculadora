@@ -21,7 +21,7 @@ body {
 
 /* Pantalla de la calculadora */
 #display {
-  width: 100%;
+  width: 90%;
   height: 60px;
   background-color: #444;
   border-radius: 10px;
